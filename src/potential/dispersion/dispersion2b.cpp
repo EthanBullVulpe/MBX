@@ -258,9 +258,36 @@ double GetDispersion(std::string m1, std::string m2, size_t nm, bool do_grads,
 
     // =====>> SECTION DISPERSION <<=====
     // ======>> PASTE CODE BELOW <<======
-
-
-  } else {
+    } else if (m1 == "h2o" and m2 == "no3") {
+         // Define number of atoms in each mon
+         nat1 = 3;
+         nat2 = 4;
+    
+         // Define the type of atom in each mon
+         types1.push_back(0);
+         types1.push_back(1);
+         types1.push_back(1);
+    
+         types2.push_back(0);
+         types2.push_back(1);
+         types2.push_back(1);
+         types2.push_back(1);
+    
+    
+         // Set the number of different types
+         nt2 = 2;
+    
+         // Fill in (in order) the C6 and d6 coefficients
+         C6.push_back( 192.80 );  // kcal/mol * A^(-6)  C--A
+         C6.push_back( 228.83 );  // kcal/mol * A^(-6)  D--A
+         C6.push_back( 93.05 );  // kcal/mol * A^(-6)  C--B
+         C6.push_back( 103.66 );  // kcal/mol * A^(-6)  D--B
+    
+         d6.push_back( 5.86439);  // A^(-1) C--A
+         d6.push_back( 3.18834);  // A^(-1) D--A
+         d6.push_back( 3.75957);  // A^(-1) C--B
+         d6.push_back( 3.81233);  // A^(-1) D--B
+      } else {
     return 0.0;
   }
 

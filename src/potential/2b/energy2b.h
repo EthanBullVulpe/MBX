@@ -10,6 +10,9 @@
 #include "potential/2b/x2b-A1B2Z2_C-v1x.h"
 // =====>> SECTION INCLUDE2B <<=====
 // ===>> PASTE YOUR CODE BELOW <<===
+#include "potential/2b/x2b_A1B2_C1D3_deg5_v1x.h"
+
+
 
 namespace e2b {
 

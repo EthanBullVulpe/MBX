@@ -13,7 +13,7 @@
 #include "bblock/system.h"
 
 #define PRINT_GRADS
-//#define NUM_GRADS
+#define NUM_GRADS
 namespace {
 
 static std::vector<bblock::System> systems;
@@ -80,26 +80,26 @@ int main(int argc, char** argv) {
                   << std::right << "Numerical" << std::setw(20) << std::right << "Difference" << std::endl;
         // Comparing analytical and numerical
         std::vector<double> xyz;
-        xyz = systems[i].GetOriginalOrderSysXyz();
+        xyz = systems[i].GetXyz();
         const double eps = 1.0e-6;
         for (size_t j = 0; j < n_sites * 3; j++) {
             if (atn[j / 3] == "virt") continue;
             const double x_orig = xyz[j];
             xyz[j] = x_orig + eps;
-            systems[i].SetOriginalOrderSysXyz(xyz);
+            systems[i].SetXyz(xyz);
             const double Ep = systems[i].Energy(false);
             xyz[j] = x_orig + 2 * eps;
-            systems[i].SetOriginalOrderSysXyz(xyz);
+            systems[i].SetXyz(xyz);
             const double Epp = systems[i].Energy(false);
             xyz[j] = x_orig - eps;
-            systems[i].SetOriginalOrderSysXyz(xyz);
+            systems[i].SetXyz(xyz);
             const double Em = systems[i].Energy(false);
             xyz[j] = x_orig - 2 * eps;
-            systems[i].SetOriginalOrderSysXyz(xyz);
+            systems[i].SetXyz(xyz);
             const double Emm = systems[i].Energy(false);
             const double gfd = (8 * (Ep - Em) - (Epp - Emm)) / (12 * eps);
             xyz[j] = x_orig;
-            systems[i].SetOriginalOrderSysXyz(xyz);
+            systems[i].SetXyz(xyz);
             std::cout << std::setprecision(5) << std::scientific << std::setw(6) << std::left << atn[j / 3]
                       << std::setw(20) << std::right << grd[j] << std::setw(20) << std::right << gfd << std::setw(20)
                       << std::right << std::fabs(grd[j] - gfd) << std::endl;

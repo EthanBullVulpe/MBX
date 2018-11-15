@@ -122,6 +122,10 @@ size_t SetUpMonomers(std::vector<std::string> mon, std::vector<size_t> &sites, s
 
         // =====>> SECTION SITES <<=====
         // ==> PASTE YOUR CODE BELOW <==
+        } else if (mon[i] == "no3") {
+            sites.push_back(4);
+            nat.push_back(4);
+
 
 
             // Halides and alkali metal ions
@@ -440,6 +444,17 @@ void GetExcluded(std::string mon, excluded_set_type &exc12, excluded_set_type &e
     exc13.clear();
     exc14.clear();
 
+    if (mon == "no3") {
+        // 12 distances
+        exc12.insert(std::make_pair(0, 1));
+        exc12.insert(std::make_pair(0, 2));
+        exc12.insert(std::make_pair(0, 3));
+        // 13 distances
+        exc13.insert(std::make_pair(1, 2));
+        exc13.insert(std::make_pair(1, 3));
+        exc13.insert(std::make_pair(2, 3));
+    } 
+
     if (mon == "h2o") {
         // 12 distances
         exc12.insert(std::make_pair(0, 1));
@@ -450,6 +465,8 @@ void GetExcluded(std::string mon, excluded_set_type &exc12, excluded_set_type &e
         exc13.insert(std::make_pair(1, 3));
         exc13.insert(std::make_pair(2, 3));
     }
+
+        
 }
 
 bool IsExcluded(excluded_set_type exc, size_t a, size_t b) {
@@ -572,6 +589,15 @@ void SetCharges(std::vector<double> xyz, std::vector<double> &charges, std::stri
 
     // =====>> SECTION CHARGES <<=====
     // =======>> PASTE BELOW <<=======
+    } else if (mon_id == "no3") {
+        for (size_t nv = 0; nv < n_mon; nv++) {
+            charges[fst_ind + nv*nsites + 0] =  1.103743 * CHARGECON;
+            charges[fst_ind + nv*nsites + 1] = -0.701248 * CHARGECON;
+            charges[fst_ind + nv*nsites + 2] = -0.701248 * CHARGECON;
+            charges[fst_ind + nv*nsites + 3] = -0.701248 * CHARGECON;
+
+        }
+
 
 
     // Note, for now, assuming only water has site dependant charges
@@ -666,7 +692,15 @@ void SetPolfac(std::vector<double> &polfac, std::string mon_id, size_t n_mon, si
 
     // =====>> SECTION POLFACS <<=====
     // =======>> PASTE BELOW <<=======
-    
+    } else if (mon_id == "no3") {
+    for (size_t nv = 0; nv < n_mon; nv++) {
+            polfac[fst_ind + nv*nsites + 0] = 1.12355;
+            polfac[fst_ind + nv*nsites + 1] = 1.28114; 
+            polfac[fst_ind + nv*nsites + 2] = 1.28114;
+            polfac[fst_ind + nv*nsites + 3] = 1.28114;
+
+    }
+ 
 
     } else if (mon_id == "h2o") {
         // Creating vector with contiguous data
@@ -719,6 +753,14 @@ void SetPol(std::vector<double> &pol, std::string mon_id, size_t n_mon, size_t n
 
     // =====>> SECTION POLS <<=====
     // =====>> PASTE  BELOW <<=====
+    } else if (mon_id == "no3") {
+    for (size_t nv = 0; nv < n_mon; nv++) {
+            pol[fst_ind + nv*nsites + 0] = 1.12355;
+            pol[fst_ind + nv*nsites + 1] = 1.28114;
+            pol[fst_ind + nv*nsites + 2] = 1.28114;
+            pol[fst_ind + nv*nsites + 3] = 1.28114;
+
+    }
 
 
     } else if (mon_id == "h2o") {

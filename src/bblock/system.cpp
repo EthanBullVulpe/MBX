@@ -465,13 +465,15 @@ double System::Energy(bool do_grads) {
     auto t2 = std::chrono::high_resolution_clock::now();
 #endif
 
-    double e2b = Get2B(do_grads);
+    //SBdouble e2b = Get2B(do_grads);
+    double e2b = 0.0;
 
 #ifdef TIMING
     auto t3 = std::chrono::high_resolution_clock::now();
 #endif
 
-    double e3b = Get3B(do_grads);
+    //SBdouble e3b = Get3B(do_grads);
+    double e3b = 0.0;
 
 #ifdef TIMING
     auto t4 = std::chrono::high_resolution_clock::now();

@@ -1,4 +1,4 @@
-set(ONEB_SOURCES ps.cpp energy1b.cpp)
+set(ONEB_SOURCES ps.cpp energy1b.cpp poly_1b_A1B3_deg5_v1.cpp poly_1b_A1B3_deg5_v1x.cpp x1b_A1B3_deg5_v1x.cpp) 
 
 #add_library(1b ${ONEB_SOURCES}) 
 #target_include_directories(1b PRIVATE ${CMAKE_SOURCE_DIR}) 

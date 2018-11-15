@@ -9,6 +9,7 @@
 #include "potential/1b/ps.h"
 // ====>> SECTION INCLUDE1B <<====
 // ===>> PASTE INCLUDE BELOW <<===
+#include "potential/1b/x1b_A1B3_deg5_v1x.h"
 
 #include "tools/definitions.h"
 

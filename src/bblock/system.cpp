@@ -286,7 +286,7 @@ void System::Initialize() {
     // calculation. Will assume no convergence if this number is reached
     maxItDip_ = 100;
     // Sets the default method to calculate induced dipoles to ASPC
-    dipole_method_ = "aspc";
+    dipole_method_ = "cg";
 
     // Sets the position of the virtual sites if any
     SetVSites();
@@ -465,15 +465,15 @@ double System::Energy(bool do_grads) {
     auto t2 = std::chrono::high_resolution_clock::now();
 #endif
 
-    //SBdouble e2b = Get2B(do_grads);
-    double e2b = 0.0;
+    double e2b = Get2B(do_grads);
+    //double e2b = 0.0;
 
 #ifdef TIMING
     auto t3 = std::chrono::high_resolution_clock::now();
 #endif
 
-    //SBdouble e3b = Get3B(do_grads);
-    double e3b = 0.0;
+    double e3b = Get3B(do_grads);
+    //double e3b = 0.0;
 
 #ifdef TIMING
     auto t4 = std::chrono::high_resolution_clock::now();

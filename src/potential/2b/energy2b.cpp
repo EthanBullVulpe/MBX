@@ -85,7 +85,7 @@ double get_2b_energy(std::string m1, std::string m2,size_t nm,
     // ====>> PASTE YOUR CODE BELOW <<====
     } else if (m1 == "h2o" && m2 == "no3") {
         x2b_A1B2_C1D3_deg5::x2b_A1B2_C1D3_v1x pot(m1,m2);
-        return pot.eval(xyz2.data(), xyz1.data(), grd2.data(), grd1.data(), nm);
+        energy = pot.eval(xyz2.data(), xyz1.data(), grd2.data(), grd1.data(), nm);
 
   } else {
     return 0.0;

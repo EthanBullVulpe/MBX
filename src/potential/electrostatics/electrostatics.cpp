@@ -1129,8 +1129,10 @@ void Electrostatics::ComputeDipoleField(std::vector<double> &in_v, std::vector<d
 
     if (ewald_alpha_ > 0 && use_pbc_) {
         // Sort the dipoles to the order helPME expects (for now)
-        int fi_mon = 0;
-        int fi_crd = 0;
+        //int fi_mon = 0;
+        //int fi_crd = 0;
+        fi_mon = 0;
+        fi_crd = 0;
         for (size_t mt = 0; mt < mon_type_count_.size(); mt++) {
             size_t ns = sites_[fi_mon];
             size_t nmon = mon_type_count_[mt].second;
@@ -1371,11 +1373,12 @@ void Electrostatics::CalculateGradients(std::vector<double> &grad) {
                     Asqsqi = Ai;
                 }
                 for (size_t m = 0; m < nmon; m++) {
-                    elec_field.CalcElecFieldGrads(xyz_.data() + fi_crd, xyz_.data() + fi_crd, chg_.data(),
+                    elec_field.CalcElecFieldGrads(xyz_.data() + fi_crd, xyz_.data() + fi_crd, chg_.data() + fi_sites,
                                                   chg_.data() + fi_sites, mu_.data() + fi_crd, mu_.data() + fi_crd, m,
                                                   m, m + 1, nmon, nmon, i, j, aDD, aCD_, Asqsqi, &ex, &ey, &ez, &phi1,
                                                   phi_.data() + fi_sites, grad_.data() + fi_crd, elec_scale_factor,
                                                   ewald_alpha_, use_pbc_, box_, box_inverse_, cutoff_);
+                    phi_[fi_sites + inmon + m] += phi1;
                     grad_[fi_crd + inmon3 + m] += ex;
                     grad_[fi_crd + inmon3 + nmon + m] += ey;
                     grad_[fi_crd + inmon3 + nmon2 + m] += ez;
@@ -1489,11 +1492,15 @@ void Electrostatics::CalculateGradients(std::vector<double> &grad) {
         fi_sites1 += nmon1 * ns1;
         fi_crd1 += nmon1 * ns1 * 3;
     }
+
     if (ewald_alpha_ > 0 && use_pbc_) {
         // Sort the dipoles to the order helPME expects (for now)
-        int fi_mon = 0;
-        int fi_sites = 0;
-        int fi_crd = 0;
+        //int fi_mon = 0;
+        //int fi_sites = 0;
+        //int fi_crd = 0;
+        fi_mon = 0;
+        fi_sites = 0;
+        fi_crd = 0;
         for (size_t mt = 0; mt < mon_type_count_.size(); mt++) {
             size_t ns = sites_[fi_mon];
             size_t nmon = mon_type_count_[mt].second;
@@ -1527,9 +1534,7 @@ void Electrostatics::CalculateGradients(std::vector<double> &grad) {
         auto coords = helpme::Matrix<double>(sys_xyz_.data(), nsites_, 3);
         auto dipoles = helpme::Matrix<double>(sys_mu_.data(), nsites_, 3);
         auto charges = helpme::Matrix<double>(sys_chg_.data(), nsites_, 1);
-        std::vector<double> tmp(10 * nsites_);
-        auto result = helpme::Matrix<double>(tmp.data(), nsites_, 10);
-        std::fill(tmp.begin(), tmp.end(), 0);
+        auto result = helpme::Matrix<double>(nsites_, 10);
         pme_solver_.computePRec(-1, dipoles, coords, coords, 2, result);
 
         // Resort field from system order
@@ -1546,6 +1551,7 @@ void Electrostatics::CalculateGradients(std::vector<double> &grad) {
                     const double *result_ptr = result[fi_sites + mns + i];
                     const double chg = sys_chg_[fi_sites + mns + i];
                     const double *mu = &sys_mu_[fi_crd + 3 * mns + 3 * i];
+                    double Phi = result_ptr[0];
                     double Erec_x = result_ptr[1];
                     double Erec_y = result_ptr[2];
                     double Erec_z = result_ptr[3];
@@ -1558,6 +1564,7 @@ void Electrostatics::CalculateGradients(std::vector<double> &grad) {
                     double Grad_x = chg * Erec_x;
                     double Grad_y = chg * Erec_y;
                     double Grad_z = chg * Erec_z;
+                    phi_[fi_sites + i * nmon + m] += Phi;
 #if !DIRECT_ONLY
                     Grad_x += Erec_xx * mu[0] + Erec_xy * mu[1] + Erec_xz * mu[2];
                     Grad_y += Erec_xy * mu[0] + Erec_yy * mu[1] + Erec_yz * mu[2];
@@ -1573,9 +1580,8 @@ void Electrostatics::CalculateGradients(std::vector<double> &grad) {
             fi_crd += nmon * ns * 3;
         }
         // Now grid up the charges
-        std::fill(tmp.begin(), tmp.end(), 0);
-        auto fieldgrad = helpme::Matrix<double>(tmp.data(), nsites_, 10);
-        pme_solver_.computePRec(0, charges, coords, coords, -2, fieldgrad);
+        result.setZero();
+        pme_solver_.computePRec(0, charges, coords, coords, -2, result);
 
         // Resort field from system order
         fi_mon = 0;
@@ -1588,7 +1594,7 @@ void Electrostatics::CalculateGradients(std::vector<double> &grad) {
             for (size_t m = 0; m < nmon; m++) {
                 size_t mns = m * ns;
                 for (size_t i = 0; i < ns; i++) {
-                    const double *result_ptr = fieldgrad[fi_sites + mns + i];
+                    const double *result_ptr = result[fi_sites + mns + i];
                     const double *mu = &sys_mu_[fi_crd + 3 * mns + 3 * i];
                     double Erec_xx = result_ptr[0];
                     double Erec_xy = result_ptr[1];

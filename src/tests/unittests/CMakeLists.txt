@@ -13,6 +13,12 @@ set( SOURCES_UNITTESTS_TESTS
     unittest-pme-withpolarization.cpp
     unittest-pme-withpolarization-findif.cpp
     unittest-gamma.cpp
+    unittest-pbc-1b-mbpol-findif.cpp
+    unittest-pbc-2bpoly-mbpol-findif.cpp
+    unittest-pbc-dispersion-mbpol-findif.cpp
+    unittest-pbc-3bpoly-mbpol-findif.cpp
+    unittest-pbc-electrostatics-mbpol-findif.cpp
+#    unittest-pbc-chargegrads-mbpol-findif.cpp
 )
 
 #

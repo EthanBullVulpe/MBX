@@ -136,6 +136,11 @@ class System {
     /**
      * Returns the charge derivatives for the whole system
      */
+    std::vector<double> GetChargeDerivativesOHH();
+
+    /**
+     * Returns the charge derivatives for the whole system
+     */
     std::vector<double> GetChargeDerivatives();
 
     /**
@@ -401,6 +406,10 @@ class System {
     void SetPBC(std::vector<double> box = {});
 
     void SetEwald(double alpha, double grid_density, int spline_order);
+
+    void SetEwaldElectrostatics(double alpha, double grid_density, int spline_order);
+
+    void SetEwaldDispersion(double alpha, double grid_density, int spline_order);
 
     /////////////////////////////////////////////////////////////////////////////
     // Energy Functions /////////////////////////////////////////////////////////

@@ -18,7 +18,8 @@ namespace noneq {
 
         nsites_ = chg.size();
         
-        tij_a_ = std::vector<double>(nsites_ * nsites_ * 3,0.0);
+        tij_a_perm_ = std::vector<double>(nsites_ * nsites_ * 3,0.0);
+        tij_ab_perm_ = std::vector<double>(nsites_ * nsites_ * 9,0.0);
         tij_ab_ = std::vector<double>(nsites_ * nsites_ * 9,0.0);
         tij_abc_ = std::vector<double>(nsites_ * nsites_ * 27,0.0);
 
@@ -27,6 +28,11 @@ namespace noneq {
         pi_ = std::vector<double>(9,0.0);
         dk_pi_all_ = std::vector<double>(nsites_ * nsites_ * 27,0.0);
         dk_pi_ = std::vector<double>(nsites_ * 27,0.0);
+
+        mu_perm_ = std::vector<double>(3,0.0);
+        mu_perm_all_ = std::vector<double>(3*nsites_,0.0);
+        mu_ind_ = std::vector<double>(3,0.0);
+        mu_ind_all_ = std::vector<double>(3*nsites_,0.0);
 
         dk_mu_ind_all_ = std::vector<double>(3*nsites_*3*nsites_,0.0);
         dk_mu_perm_all_ = std::vector<double>(3*nsites_*3*nsites_,0.0);
@@ -37,10 +43,12 @@ namespace noneq {
         box_ = box;
     }
 
-    void Perturbation::SetDipoles(std::vector<double> mu_perm, std::vector<double> mu_ind) {
-        mu_ind_all_ = mu_ind;
-        mu_perm_all_ = mu_perm;
-    }
+// Gets the dipoles from electrostatics in MBX
+// this code can calculate permanent and induced dipoles now, so this function is not needed
+//    void Perturbation::SetDipoles(std::vector<double> mu_perm, std::vector<double> mu_ind) {
+//        mu_ind_all_ = mu_ind;
+//        mu_perm_all_ = mu_perm;
+//    }
 
     void Perturbation::SetChargeDerivative(std::vector<double> chg_der) {
         dchg_ = chg_der;
@@ -73,8 +81,8 @@ namespace noneq {
     void Perturbation::GetTij_a_ab() {
         // Loop over all pairs
         double r, r2;
-        double s1, s2, s3;
-        double A, a_thole;
+        double s1, s2, s3, s1_perm, s2_perm, s3_perm;
+        double A, a_thole, a_thole_perm;
         double one_over_six = 1.0/6.0;
         std::vector<double> dr(3,0.0);
         for (size_t i = 0; i < nsites_ - 1; i++) {
@@ -88,8 +96,11 @@ namespace noneq {
                 size_t j3n = nsites_ * j3;
                 size_t j9n = nsites_ * j9;
                 // Obtain proper a
-                if (i%4 == 0 and (j == i+1 or j== i+2)) a_thole = 0.626;
-                else a_thole = 0.055;
+// TODO: hard-coded for NaCl test case, need to generalize
+//                if (i%4 == 0 and (j == i+1 or j== i+2)) a_thole = 0.626;
+//                else a_thole = 0.055;
+                a_thole = 0.055;
+                a_thole_perm = 0.4;
                 // Obtain A
                 A = std::pow(polfac_[i] * polfac_[j], one_over_six);
 
@@ -103,13 +114,14 @@ namespace noneq {
                 r = sqrt(r2);
 
                 GetS1S2S3(r, A, a_thole, s1, s2, s3);
+                GetS1S2S3(r, A, a_thole_perm, s1_perm, s2_perm, s3_perm);
 
                 for (size_t a = 0; a < 3; a++) {
-                    tij_a_[i3n + j3 + a] = -s1 * dr[a] / (r2*r);
-                    tij_a_[j3n + i3 + a] = -tij_a_[i3n + j3 + a];
+                    tij_a_perm_[i3n + j3 + a] = -s1_perm * dr[a] / (r2*r);
+                    tij_a_perm_[j3n + i3 + a] = -tij_a_perm_[i3n + j3 + a];
                     for (size_t b = 0; b < 3; b++) {
-                        tij_ab_[i9n + j9 + 3*a + b] = s2 * 3.0* dr[a]*dr[b]/(r2*r2*r) - s1*Delta(a,b)/(r2*r);
-                        tij_ab_[j9n + i9 + 3*a + b] = tij_ab_[i9n + j9 + 3*a + b];
+                        tij_ab_perm_[i9n + j9 + 3*a + b] = s2_perm * 3.0* dr[a]*dr[b]/(r2*r2*r) - s1_perm*Delta(a,b)/(r2*r);
+                        tij_ab_perm_[j9n + i9 + 3*a + b] = tij_ab_perm_[i9n + j9 + 3*a + b];
                     }
                 }
             }
@@ -119,8 +131,8 @@ namespace noneq {
     void Perturbation::GetTij_ab_abc() {
         // Loop over all pairs
         double r, r2;
-        double s1, s2, s3;
-        double A, a_thole;
+        double s1, s2, s3, s1_perm, s2_perm, s3_perm;
+        double A, a_thole, a_thole_perm;
         double one_over_six = 1.0/6.0;
         std::vector<double> dr(3,0.0);
         for (size_t i = 0; i < nsites_ - 1; i++) {
@@ -135,10 +147,13 @@ namespace noneq {
                 size_t j27 = 9*j3;
                 size_t j9n = nsites_ * j9;
                 size_t j27n = nsites_ * j27;
-                // Obtain proper a TODO
+                // Obtain proper a
                 //a_thole = 0.055;
-                if (i%4 == 0 and (j == i+1 or j== i+2)) a_thole = 0.626;
-                else a_thole = 0.055;
+// TODO: hard-coded for NaCl test case, need to generalize
+//                if (i%4 == 0 and (j == i+1 or j== i+2)) a_thole = 0.626;
+//                else a_thole = 0.055;
+                a_thole = 0.055;
+                a_thole_perm = 0.4;
                 // Obtain A
                 A = std::pow(polfac_[i] * polfac_[j], one_over_six);
 
@@ -169,11 +184,12 @@ namespace noneq {
         }
     }
 
-    void Perturbation::GetElectrostaticTensors(std::vector<double> &Tij_a, std::vector<double> &Tij_ab, std::vector<double> &Tij_abc) {
+    void Perturbation::GetElectrostaticTensors(std::vector<double> &Tij_a_perm, std::vector<double> &Tij_ab_perm, std::vector<double> &Tij_ab, std::vector<double> &Tij_abc) {
         GetTij_a_ab();
+        Tij_a_perm = tij_a_perm_;
+        Tij_ab_perm = tij_ab_perm_;
+
         GetTij_ab_abc();
-        
-        Tij_a = tij_a_;
         Tij_ab = tij_ab_;
         Tij_abc = tij_abc_;
     }
@@ -186,6 +202,18 @@ namespace noneq {
     void Perturbation::GetDkPi(std::vector<double> &dk_pi) {
         CalculateDkPi();
         dk_pi = dk_pi_;
+    }
+
+    void Perturbation::GetMuPerm(std::vector<double> &mu_perm) {
+        CalculateMuPerm();
+        mu_perm = mu_perm_;
+    }
+    
+    void Perturbation::GetMuInd(std::vector<double> &mu_ind) {
+        GetTij_a_ab();
+        GetTij_ab_abc();
+        CalculateMuInd();
+        mu_ind = mu_ind_;
     }
 
     void Perturbation::GetDkMu(std::vector<double> &dk_mu) {
@@ -215,7 +243,7 @@ namespace noneq {
 
         std::vector<double> pi_all_old;
         double learn_param = 0.8;
-        // Iterate til convergence
+        // Iterate until convergence
         size_t it = 0;
         while (true) {
             // Save previous iteration
@@ -375,6 +403,102 @@ namespace noneq {
                     dk_pi_[27*k + m] += dk_pi_all_[27*nsites_*k + 27*i + m];
     }
 
+    void Perturbation::CalculateMuPermAll() {
+
+      std::vector<double> mu_perm_tmp(3*nsites_,0.0);
+
+      for (size_t i = 0; i < nsites_; i++) {
+          size_t i3 = 3*i;
+          for (size_t a = 0; a < 3; a++) {
+              mu_perm_tmp[i3 + a] += chg_[i] * xyz_[i3 + a];
+          }
+      }
+
+      std::copy(mu_perm_tmp.begin(), mu_perm_tmp.end(), mu_perm_all_.begin());
+
+    }
+
+    void Perturbation::CalculateMuPerm() {
+    
+        // Initialize mu_perm_ to 0
+        std::fill(mu_perm_.begin(), mu_perm_.end(), 0.0);
+        CalculateMuPermAll();
+
+        for (size_t i = 0; i < nsites_; i++) {
+            for (size_t m = 0; m < 3; m++) {
+                mu_perm_[m] += mu_perm_all_[3*i + m];
+            }
+        }
+
+    }
+
+    void Perturbation::CalculateMuIndAll() {
+
+        std::vector<double> mu_ind_old(3*nsites_,0.0);
+        std::vector<double> mu_ind_new(3*nsites_,0.0);
+
+        size_t it = 0;
+        while (true) {
+        
+            mu_ind_old = mu_ind_new;
+            std::fill(mu_ind_new.begin(),mu_ind_new.end(),0.0);
+
+            for (size_t i = 0; i < nsites_; i++) {
+                for (size_t j = 0; j < nsites_; j++) {
+                    if (i == j) continue;
+                        for (size_t a = 0; a < 3; a++) {
+                            mu_ind_new[3*i + a] += tij_a_perm_[3*nsites_*i + 3*j + a] * chg_[j];
+
+                            for (size_t b = 0; b < 3; b++) {
+                                mu_ind_new[3*i + a] += tij_ab_[9*nsites_*i + 9*j + 3*a + b] * mu_ind_old[3*j + b];                                
+                            }
+
+                        }
+                }
+
+                for (size_t m = 0; m < 3; m++)
+                    mu_ind_new[3*i + m] *= alpha_[i];
+            }
+
+            // Check difference
+            double err2 = 0.0;
+            for (size_t i = 0; i < mu_ind_new.size(); i++) {
+                double err = mu_ind_new[i] - mu_ind_old[i];
+                err2 += err*err;
+            }
+
+            // Break if convergence
+            if (sqrt(err2) < tol_) break;
+            //std::cout << "Iteration: " << it << " " << sqrt(err2) << std::endl;
+
+            // Error if maxit have been reached
+            if (it > maxit_) {
+                std::cerr << "Induced dipole reached max number of iterations\n";
+                break;
+            }
+
+            it++;
+
+        }
+
+        std::copy(mu_ind_new.begin(), mu_ind_new.end(), mu_ind_all_.begin());
+
+    }
+
+    void Perturbation::CalculateMuInd() {
+
+        // Initialize mu_ind_ to 0
+        std::fill(mu_ind_.begin(), mu_ind_.end(), 0.0);
+        CalculateMuIndAll();
+
+        for (size_t i = 0; i < nsites_; i++) {
+            for (size_t m = 0; m < 3; m++) {
+                mu_ind_[m] += mu_ind_all_[3*i + m];
+            }
+        }
+
+    }
+
     void Perturbation::CalculateDkMuAll(size_t k) {
         size_t size = nsites_ * 9;  // 3*N*3
         size_t shift = k * size;
@@ -389,30 +513,33 @@ namespace noneq {
             for (size_t i = 0; i < nsites_; i++) {
                 for (size_t j = 0; j < nsites_; j++) {
                     if (i == j) continue;
-                    if (!IsIJBonded(i,j)) {
+                    // TODO: IsIJBonded hard-coded for water
+                    // need to generalize so currently commented out
+//                    if (!IsIJBonded(i,j)) {
                         for (size_t u = 0; u < 3; u++) {
                             for (size_t a = 0; a < 3; a++) {
-                                dk_new[9*i + 3*u + a] += tij_ab_[9*nsites_*i + 9*j + 3*u + a]
+                                dk_new[9*i + 3*u + a] += tij_ab_perm_[9*nsites_*i + 9*j + 3*u + a]
                                                       * (Delta(k,i) - Delta(k,j))
                                                       * chg_[j];
-                                dk_new[9*i + 3*u + a] += tij_a_[3*nsites_*i +3*j +a] 
+                                dk_new[9*i + 3*u + a] += tij_a_perm_[3*nsites_*i + 3*j + a] 
                                                       * dchg_[3*nsites_*j + 3*k + u];
                             }
                         }
-                    }
+//                    } // IsIJBonded
 
                     for (size_t u = 0; u < 3; u++) {
                         for (size_t a = 0; a < 3; a++) {
                             for (size_t b = 0; b < 3; b++) {
                                 dk_new[9*i + 3*u + a] += 
-                                         tij_abc_[27*nsites_*i + 27*j + 9*u +3*a + b] 
+                                         tij_abc_[27*nsites_*i + 27*j + 9*u + 3*a + b] 
                                        * (Delta(k,i) - Delta(k,j))
                                        * mu_ind_all_[3*j + b];
                                 dk_new[9*i + 3*u + a] += tij_ab_[9*nsites_*i + 9*j + 3*a + b]
-                                       * dk_old[9*j + 3*u * b];
+                                       * dk_old[9*j + 3*u + b];
                             }
                         }
                     }
+
                 }
                 for (size_t m = 0; m < 9; m++)
                     dk_new[9*i + m] *= alpha_[i];

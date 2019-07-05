@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <iomanip>
 
 
 namespace noneq {
@@ -20,13 +21,16 @@ class Perturbation {
     std::vector<double> GetPerturbationPolarizability(double E1, double E2, size_t a, size_t b, double direction);
     std::vector<double> GetPerturbationDipole(double E1, double direction);
 
-    void GetElectrostaticTensors(std::vector<double> &Tij_a, std::vector<double> &Tij_ab, std::vector<double> &Tij_abc);
+    void GetElectrostaticTensors(std::vector<double> &Tij_a_perm, std::vector<double> &Tij_ab_perm, std::vector<double> &Tij_ab, std::vector<double> &Tij_abc);
 
     void GetPolarizabilityAll(std::vector<double> &pi_all);
 
     void GetPolarizability(std::vector<double> &pi);
 
     void GetDkPi(std::vector<double> &dk_pi);
+
+    void GetMuPerm(std::vector<double> &mu_perm);
+    void GetMuInd(std::vector<double> &mu_ind);
 
     void GetDkMu(std::vector<double> &dk_mu);
     void GetDkMuInd(std::vector<double> &dk_mu);
@@ -38,6 +42,10 @@ class Perturbation {
     void CalculatePolarizability();
     size_t CalculateDkPiAll(size_t k);
     void CalculateDkPi();
+    void CalculateMuPermAll();
+    void CalculateMuIndAll(); 
+    void CalculateMuPerm(); 
+    void CalculateMuInd(); 
     void CalculateDkMuAll(size_t k);
     void CalculateDkMu();
 
@@ -57,11 +65,13 @@ class Perturbation {
     // isotropic polarizability, N
     std::vector<double> alpha_;
     // scaling factor for screening, N
-    // Paesani lab typically uses polfac = alpha, but we are not recstricted to that.
+    // Paesani lab typically uses polfac = alpha, but we are not restricted to that.
     std::vector<double> polfac_;
     
     // Order 1 tensor, N*N*3
-    std::vector<double> tij_a_;
+    std::vector<double> tij_a_perm_;
+    // Order 2 tensor, N*N*3*3
+    std::vector<double> tij_ab_perm_;
     // Order 2 tensor, N*N*3*3
     std::vector<double> tij_ab_;
     // Order 3 tensor, N*N*3*3*3
@@ -85,11 +95,13 @@ class Perturbation {
     // Charge derivatives N*3N 
     std::vector<double> dchg_;
 
-    // Induced dipoles 3*N
-    std::vector<double> mu_ind_all_;
+    // Permanent dipoles
+    std::vector<double> mu_perm_;     // 3
+    std::vector<double> mu_perm_all_; // 3*N
 
-    // Permanent dipoles 3*N
-    std::vector<double> mu_perm_all_;
+    // Induced dipoles
+    std::vector<double> mu_ind_;      // 3
+    std::vector<double> mu_ind_all_;  // 3*N
 
     // Derivative of mu_ind_all_  3*N*3*N
     std::vector<double> dk_mu_ind_all_;
@@ -105,6 +117,9 @@ class Perturbation {
 
     // Derivative of mu_  3*N*3
     std::vector<double> dk_mu_;
+
+    std::vector<double> dk_mu_ind;
+    std::vector<double> dk_mu_ind_all;
 };
 
 // Get screening functions s1, s2, and s3.
@@ -119,7 +134,7 @@ int Delta(int i, int j);
 // Assuming orthorombic box.
 void DoPBC(std::vector<double> &r, const std::vector<double> &box);
 
-// Hardcoded for water. Need to generalize.
+// TODO: hard-coded for water, need to generalize
 // Returns if i and j are bonded
 bool IsIJBonded(size_t i, size_t j);
 

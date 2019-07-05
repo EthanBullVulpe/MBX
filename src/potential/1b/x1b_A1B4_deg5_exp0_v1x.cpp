@@ -1,11 +1,3 @@
-
-#include <cmath>
-#include <cassert>
-#include <cstdlib>
-#include <iomanip>
-
-#include <netcdf.h>
-
 #include "x1b_A1B4_deg5_exp0_v1x.h" 
  
 
